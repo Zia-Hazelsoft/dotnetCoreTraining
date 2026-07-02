@@ -11,12 +11,12 @@ namespace UserManagement.Api.Services
     public class UserService : IUserService
     {
         // In-memory "database" for now.
-        private static readonly List<User> _users = new()
-        {
+        private static readonly List<User> _users =
+        [
             new User { Id = 1, FirstName = "Ali", LastName = "Khan", Email = "ali.khan@example.com" },
             new User { Id = 2, FirstName = "Sara", LastName = "Ahmed", Email = "sara.ahmed@example.com" },
             new User { Id = 3, FirstName = "Bilal", LastName = "Hassan", Email = "bilal.hassan@example.com" }
-        };
+        ];
 
         private static int _nextId = 4;
 
