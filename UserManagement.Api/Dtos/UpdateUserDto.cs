@@ -1,6 +1,6 @@
-namespace UserManagement.Api.Models
+namespace UserManagement.Api.Dtos
 {
-    public class CreateUserDto
+    public class UpdateUserDto
     {
         public string FirstName { get; set; } = string.Empty;
 

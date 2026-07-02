@@ -1,7 +1,9 @@
-namespace UserManagement.Api.Models
+namespace UserManagement.Api.Dtos
 {
-    public class UpdateUserDto
+    public class UserDto
     {
+        public int Id { get; set; }
+
         public string FirstName { get; set; } = string.Empty;
 
         public string LastName { get; set; } = string.Empty;
