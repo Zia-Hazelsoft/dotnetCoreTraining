@@ -1,56 +1,50 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using UserManagement.Api.Data;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Models;
 
 namespace UserManagement.Api.Services
 {
     /// <summary>
-    /// Implements User business logic. Currently backed by an in-memory list;
-    /// will be replaced with EF Core persistence in Week 3.
+    /// Implements User business logic, backed by the database via AppDbContext.
     /// </summary>
     public class UserService : IUserService
     {
-        // In-memory "database" for now.
-        private static readonly List<User> _users =
-        [
-            new User { Id = 1, FirstName = "Ali", LastName = "Khan", Email = "ali.khan@example.com" },
-            new User { Id = 2, FirstName = "Sara", LastName = "Ahmed", Email = "sara.ahmed@example.com" },
-            new User { Id = 3, FirstName = "Bilal", LastName = "Hassan", Email = "bilal.hassan@example.com" }
-        ];
-
-        private static int _nextId = 4;
-
+        private readonly AppDbContext _context;
         private readonly IMapper _mapper;
 
-        public UserService(IMapper mapper)
+        public UserService(AppDbContext context, IMapper mapper)
         {
+            _context = context;
             _mapper = mapper;
         }
 
-        public IEnumerable<UserDto> GetAllUsers()
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
-            return _mapper.Map<IEnumerable<UserDto>>(_users);
+            var users = await _context.Users.ToListAsync();
+            return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
-        public UserDto? GetUserById(int id)
+        public async Task<UserDto?> GetUserByIdAsync(int id)
         {
-            var user = _users.FirstOrDefault(u => u.Id == id);
+            var user = await _context.Users.FindAsync(id);
             return user is null ? null : _mapper.Map<UserDto>(user);
         }
 
-        public UserDto CreateUser(CreateUserDto createUserDto)
+        public async Task<UserDto> CreateUserAsync(CreateUserDto createUserDto)
         {
             var newUser = _mapper.Map<User>(createUserDto);
-            newUser.Id = _nextId++; // server-generated id
 
-            _users.Add(newUser);
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync(); // Id is populated here by the database (IDENTITY column)
 
             return _mapper.Map<UserDto>(newUser);
         }
 
-        public bool UpdateUser(int id, UpdateUserDto updateUserDto)
+        public async Task<bool> UpdateUserAsync(int id, UpdateUserDto updateUserDto)
         {
-            var existingUser = _users.FirstOrDefault(u => u.Id == id);
+            var existingUser = await _context.Users.FindAsync(id);
 
             if (existingUser is null)
             {
@@ -61,19 +55,21 @@ namespace UserManagement.Api.Services
             existingUser.LastName = updateUserDto.LastName;
             existingUser.Email = updateUserDto.Email;
 
+            await _context.SaveChangesAsync();
             return true;
         }
 
-        public bool DeleteUser(int id)
+        public async Task<bool> DeleteUserAsync(int id)
         {
-            var existingUser = _users.FirstOrDefault(u => u.Id == id);
+            var existingUser = await _context.Users.FindAsync(id);
 
             if (existingUser is null)
             {
                 return false;
             }
 
-            _users.Remove(existingUser);
+            _context.Users.Remove(existingUser);
+            await _context.SaveChangesAsync();
             return true;
         }
     }
