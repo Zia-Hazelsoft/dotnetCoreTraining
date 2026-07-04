@@ -1,0 +1,54 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using UserManagement.Api.Models;
+
+namespace UserManagement.Api.Services
+{
+    public class TokenService : ITokenService
+    {
+        private readonly IConfiguration _config;
+
+        public TokenService(IConfiguration config)
+        {
+            _config = config;
+        }
+
+        public string GenerateToken(User user)
+        {
+            var jwtSettings = _config.GetSection("Jwt");
+            var keyStr = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured.");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.GivenName, user.FirstName),
+                new Claim(ClaimTypes.Surname, user.LastName),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+            };
+
+            var expiryMinutes = double.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
+            var expiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = expiry,
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"],
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+    }
+}

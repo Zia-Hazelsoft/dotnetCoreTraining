@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Api.Common;
 using UserManagement.Api.Dtos;
@@ -10,6 +11,7 @@ namespace UserManagement.Api.Controllers
     /// All business logic lives in IUserService — this controller only
     /// handles HTTP concerns (routing, status codes, response shaping).
     /// </summary>
+    [Authorize]
     [ApiController]
     [Route("api/v1/users")]
     public class UsersController : ControllerBase
