@@ -10,20 +10,12 @@ namespace UserManagement.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/auth")]
-    public class AuthController : ControllerBase
+    public class AuthController(UserManager<User> userManager, ITokenService tokenService, IMapper mapper, IConfiguration config) : ControllerBase
     {
-        private readonly UserManager<User> _userManager;
-        private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper;
-        private readonly IConfiguration _config;
-
-        public AuthController(UserManager<User> userManager, ITokenService tokenService, IMapper mapper, IConfiguration config)
-        {
-            _userManager = userManager;
-            _tokenService = tokenService;
-            _mapper = mapper;
-            _config = config;
-        }
+        private readonly UserManager<User> _userManager = userManager;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IMapper _mapper = mapper;
+        private readonly IConfiguration _config = config;
 
         [HttpPost("login")]
         public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginDto loginDto)
