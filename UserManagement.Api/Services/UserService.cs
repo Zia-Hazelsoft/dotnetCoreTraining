@@ -9,16 +9,10 @@ namespace UserManagement.Api.Services
     /// <summary>
     /// Implements User business logic, backed by the ASP.NET Core Identity UserManager.
     /// </summary>
-    public class UserService : IUserService
+    public class UserService(UserManager<User> userManager, IMapper mapper) : IUserService
     {
-        private readonly UserManager<User> _userManager;
-        private readonly IMapper _mapper;
-
-        public UserService(UserManager<User> userManager, IMapper mapper)
-        {
-            _userManager = userManager;
-            _mapper = mapper;
-        }
+        private readonly UserManager<User> _userManager = userManager;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
