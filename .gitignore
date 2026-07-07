@@ -7,9 +7,8 @@
 .env
 
 # ASP.NET Core local configuration
-/appsettings.json
-/appsettings.Development.json
-/appsettings.*.json
+**/appsettings.json
+**/appsettings.Development.json
 
 # User-specific files
 *.rsuser
