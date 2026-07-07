@@ -14,14 +14,9 @@ namespace UserManagement.Api.Controllers
     [Authorize]
     [ApiController]
     [Route("api/v1/users")]
-    public class UsersController : ControllerBase
+    public class UsersController(IUserService userService) : ControllerBase
     {
-        private readonly IUserService _userService;
-
-        public UsersController(IUserService userService)
-        {
-            _userService = userService;
-        }
+        private readonly IUserService _userService = userService;
 
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetAllUsers()
