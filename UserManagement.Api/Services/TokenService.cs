@@ -24,13 +24,13 @@ namespace UserManagement.Api.Services
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-                new Claim(ClaimTypes.GivenName, user.FirstName),
-                new Claim(ClaimTypes.Surname, user.LastName),
-                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Email, user.Email ?? string.Empty),
+                new(ClaimTypes.GivenName, user.FirstName),
+                new(ClaimTypes.Surname, user.LastName),
+                new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
             };
 
             var expiryMinutes = double.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
