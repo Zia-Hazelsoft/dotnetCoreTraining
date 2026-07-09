@@ -1,6 +1,8 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using UserManagement.Api.Common;
+using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Models;
 using UserManagement.Api.Repositories;
@@ -16,10 +18,16 @@ namespace UserManagement.Api.Services
         private readonly UserManager<User> _userManager = userManager;
         private readonly IMapper _mapper = mapper;
 
-        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        public async Task<PaginatedResponseDto<UserDto>> GetUsersAsync(UserParameters userParameters)
         {
-            var users = await _repository.User.GetAllUserAsync(trackChanges: false);
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            var pagedUsers = await _repository.User.GetUsersAsync(userParameters, trackChanges: false);
+            var userDtos = _mapper.Map<IEnumerable<UserDto>>(pagedUsers);
+
+            return new PaginatedResponseDto<UserDto>
+            {
+                Items = userDtos,
+                MetaData = pagedUsers.MetaData
+            };
         }
 
         public async Task<UserDto?> GetUserByIdAsync(int id)
@@ -30,19 +38,13 @@ namespace UserManagement.Api.Services
 
         public async Task<UserDto> CreateUserAsync(CreateUserDto createUserDto)
         {
-            var newUser = new User
-            {
-                FirstName = createUserDto.FirstName,
-                LastName = createUserDto.LastName,
-                Email = createUserDto.Email,
-                UserName = createUserDto.Email // Set UserName to Email for Identity framework
-            };
+            var newUser = _mapper.Map<User>(createUserDto);
 
             var result = await _userManager.CreateAsync(newUser, createUserDto.Password);
             if (!result.Succeeded)
             {
-                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-                throw new InvalidOperationException($"User creation failed: {errors}");
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                throw new ApplicationValidationException(Messages.Error.UserCreationFailed, errors);
             }
 
             return _mapper.Map<UserDto>(newUser);
@@ -56,10 +58,7 @@ namespace UserManagement.Api.Services
                 return false;
             }
 
-            existingUser.FirstName = updateUserDto.FirstName;
-            existingUser.LastName = updateUserDto.LastName;
-            existingUser.Email = updateUserDto.Email;
-            existingUser.UserName = updateUserDto.Email; // Keep UserName in sync with Email
+            _mapper.Map(updateUserDto, existingUser);
 
             _repository.User.Update(existingUser);
             await _repository.SaveAsync();

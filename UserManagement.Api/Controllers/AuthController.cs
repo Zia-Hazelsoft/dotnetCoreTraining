@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Api.Common;
+using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Models;
 using UserManagement.Api.Services;
@@ -9,7 +10,7 @@ using UserManagement.Api.Services;
 namespace UserManagement.Api.Controllers
 {
     [ApiController]
-    [Route("api/v1/auth")]
+    [Route(ApiRoutes.Auth)]
     public class AuthController(UserManager<User> userManager, ITokenService tokenService, IMapper mapper, IConfiguration config) : ControllerBase
     {
         private readonly UserManager<User> _userManager = userManager;
@@ -23,7 +24,7 @@ namespace UserManagement.Api.Controllers
             var user = await _userManager.FindByEmailAsync(loginDto.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
             {
-                return Unauthorized(ApiResponse<AuthResponseDto>.FailureResponse("Invalid email or password."));
+                return Unauthorized(ApiResponse<AuthResponseDto>.FailureResponse(Messages.Error.InvalidCredentials));
             }
 
             var token = _tokenService.GenerateToken(user);
@@ -40,7 +41,7 @@ namespace UserManagement.Api.Controllers
                 User = userDto
             };
 
-            return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(authResponse, "Login successful."));
+            return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(authResponse, Messages.Success.LoginSuccessful));
         }
     }
 }

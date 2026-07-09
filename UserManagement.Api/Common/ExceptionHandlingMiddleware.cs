@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using UserManagement.Api.Constants;
 
 namespace UserManagement.Api.Common
 {
@@ -44,14 +45,15 @@ namespace UserManagement.Api.Common
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
                     response = ApiResponse<object>.FailureResponse(
-                    "An unexpected error occurred on the server.");
+                        Messages.Error.Unexpected);
 
                     break;
             }
 
             var options = new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
 
             var json = JsonSerializer.Serialize(response, options);

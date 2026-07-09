@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UserManagement.Api.Common;
+using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Services;
 
@@ -13,16 +14,16 @@ namespace UserManagement.Api.Controllers
     /// </summary>
     [Authorize]
     [ApiController]
-    [Route("api/v1/users")]
+    [Route(ApiRoutes.Users)]
     public class UsersController(IUserService userService) : ControllerBase
     {
         private readonly IUserService _userService = userService;
 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetAllUsers()
+        public async Task<ActionResult<ApiResponse<PaginatedResponseDto<UserDto>>>> GetAllUsers([FromQuery] UserParameters userParameters)
         {
-            var users = await _userService.GetAllUsersAsync();
-            return Ok(ApiResponse<IEnumerable<UserDto>>.SuccessResponse(users));
+            var usersResult = await _userService.GetUsersAsync(userParameters);
+            return Ok(ApiResponse<PaginatedResponseDto<UserDto>>.SuccessResponse(usersResult, Messages.Success.RequestSuccessful));
         }
 
         [HttpGet("{id:int}")]
@@ -32,10 +33,10 @@ namespace UserManagement.Api.Controllers
 
             if (user is null)
             {
-                return NotFound(ApiResponse<UserDto>.FailureResponse($"User with id {id} was not found."));
+                return NotFound(ApiResponse<UserDto>.FailureResponse(string.Format(Messages.Error.UserNotFound, id)));
             }
 
-            return Ok(ApiResponse<UserDto>.SuccessResponse(user));
+            return Ok(ApiResponse<UserDto>.SuccessResponse(user, Messages.Success.RequestSuccessful));
         }
 
         [HttpPost]
@@ -46,7 +47,7 @@ namespace UserManagement.Api.Controllers
             return CreatedAtAction(
                 nameof(GetUserById),
                 new { id = createdUser.Id },
-                ApiResponse<UserDto>.SuccessResponse(createdUser, "User created successfully."));
+                ApiResponse<UserDto>.SuccessResponse(createdUser, Messages.Success.UserCreated));
         }
 
         [HttpPut("{id:int}")]
@@ -56,10 +57,10 @@ namespace UserManagement.Api.Controllers
 
             if (!wasUpdated)
             {
-                return NotFound(ApiResponse<object>.FailureResponse($"User with id {id} was not found."));
+                return NotFound(ApiResponse<object>.FailureResponse(string.Format(Messages.Error.UserNotFound, id)));
             }
 
-            return Ok(ApiResponse<object>.SuccessResponse(new { }, "User updated successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(new { }, Messages.Success.UserUpdated));
         }
 
         [HttpDelete("{id:int}")]
@@ -69,10 +70,10 @@ namespace UserManagement.Api.Controllers
 
             if (!wasDeleted)
             {
-                return NotFound(ApiResponse<object>.FailureResponse($"User with id {id} was not found."));
+                return NotFound(ApiResponse<object>.FailureResponse(string.Format(Messages.Error.UserNotFound, id)));
             }
 
-            return Ok(ApiResponse<object>.SuccessResponse(new { }, "User deleted successfully."));
+            return Ok(ApiResponse<object>.SuccessResponse(new { }, Messages.Success.UserDeleted));
         }
     }
 }

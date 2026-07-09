@@ -4,19 +4,14 @@ using UserManagement.Api.Data;
 
 namespace UserManagement.Api.Repositories
 {
-    public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
+    public abstract class RepositoryBase<T>(AppDbContext repositoryContext) : IRepositoryBase<T> where T : class
     {
-        protected AppDbContext RepositoryContext { get; set; }
-
-        protected RepositoryBase(AppDbContext repositoryContext)
-        {
-            this.RepositoryContext = repositoryContext;
-        }
+        protected AppDbContext RepositoryContext { get; set; } = repositoryContext;
 
         public IQueryable<T> FindAll(bool trackChanges = false)
         {
             return trackChanges 
-                ? this.RepositoryContext.Set<T>() 
+                ? this.RepositoryContext.Set<T>()
                 : this.RepositoryContext.Set<T>().AsNoTracking();
         }
 

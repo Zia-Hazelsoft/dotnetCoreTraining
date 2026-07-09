@@ -4,7 +4,7 @@ namespace UserManagement.Api.Services
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserDto>> GetAllUsersAsync();
+        Task<PaginatedResponseDto<UserDto>> GetUsersAsync(UserParameters userParameters);
 
         Task<UserDto?> GetUserByIdAsync(int id);
 
