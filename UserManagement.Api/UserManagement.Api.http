@@ -1,3 +1,62 @@
-@UserManagement.Api_HostAddress = http://localhost:5067
+@HostAddress = http://localhost:5067
+
+# 1. Login to retrieve the JWT token
+# Fill the token in the `@token` variable below to authenticate subsequent requests.
+# @name login
+POST {{HostAddress}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "ali.khan@example.com",
+  "password": "Password123!"
+}
 
 ###
+
+# Copy the value of $.data.token from the login response and paste it below:
+# @token =
+###
+
+# 2. Get Users (Paginated, Searchable, Sortable)
+# Try changing query parameters: pageNumber, pageSize, searchTerm, orderBy
+GET {{HostAddress}}/api/v1/users?pageNumber=1&pageSize=10&searchTerm=Ali&orderBy=lastName desc
+Authorization: Bearer {{token}}
+
+###
+
+# 3. Get User By ID
+GET {{HostAddress}}/api/v1/users/1
+Authorization: Bearer {{token}}
+
+###
+
+# 4. Create a New User
+POST {{HostAddress}}/api/v1/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Ismail",
+  "lastName": "Malik",
+  "email": "zia@gmail.com",
+  "password": "Password123!"
+}
+
+###
+
+# 5. Update an Existing User
+PUT {{HostAddress}}/api/v1/users/1002
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Zia",
+  "lastName": "Malik Updated",
+  "email": "zia.updated@gmail.com"
+}
+
+###
+
+# 6. Delete a User
+DELETE {{HostAddress}}/api/v1/users/1002
+Authorization: Bearer {{token}}

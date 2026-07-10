@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Your Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+            --input-bg: #334155;
+            --input-border: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            border: 1px solid #334155;
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        input[readonly] {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--error-color);
+            color: #fca5a5;
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--success-color);
+            color: #a7f3d0;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Activate Your Account</h2>
+        <p class="subtitle">Please choose a password to confirm your registration</p>
+
+        <div id="alert-error" class="alert alert-error"></div>
+        <div id="alert-success" class="alert alert-success"></div>
+
+        <form id="confirmForm">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" value="{email}" readonly>
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="password" placeholder="Enter at least 8 characters" required minlength="8">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Re-enter password" required>
+            </div>
+            <button type="submit" id="btnSubmit">
+                <div class="spinner" id="btnSpinner"></div>
+                Confirm Registration
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('confirmForm');
+        const alertError = document.getElementById('alert-error');
+        const alertSuccess = document.getElementById('alert-success');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Reset alerts
+            alertError.style.display = 'none';
+            alertSuccess.style.display = 'none';
+
+            if (password !== confirmPassword) {
+                alertError.textContent = 'Passwords do not match.';
+                alertError.style.display = 'block';
+                return;
+            }
+
+            // Show loading
+            btnSpinner.style.display = 'block';
+            btnSubmit.disabled = true;
+
+            try {
+                const response = await fetch('/api/v1/auth/confirm-registration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        token: decodeURIComponent('{token}'),
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alertSuccess.textContent = 'Your account has been activated successfully! You can now log in.';
+                    alertSuccess.style.display = 'block';
+                    form.style.display = 'none';
+                    document.querySelector('.subtitle').textContent = 'Activation Successful';
+                } else {
+                    alertError.textContent = result.message || 'Verification failed. Please make sure the token is valid.';
+                    if (result.errors && result.errors.length > 0) {
+                        alertError.innerHTML += '<br><ul style="padding-left: 20px; margin-top: 5px;">' + result.errors.map(err => '<li>' + err + '</li>').join('') + '</ul>';
+                    }
+                    alertError.style.display = 'block';
+                }
+            } catch (error) {
+                alertError.textContent = 'An unexpected error occurred. Please try again.';
+                alertError.style.display = 'block';
+            } finally {
+                btnSpinner.style.display = 'none';
+                btnSubmit.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

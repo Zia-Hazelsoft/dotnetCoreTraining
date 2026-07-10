@@ -1,6 +1,6 @@
 using UserManagement.Api.Models;
 
-namespace UserManagement.Api.Services
+namespace UserManagement.Api.Services.Interfaces
 {
     public interface ITokenService
     {

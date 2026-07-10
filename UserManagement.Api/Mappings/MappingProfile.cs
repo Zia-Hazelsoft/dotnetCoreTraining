@@ -12,8 +12,12 @@ namespace UserManagement.Api.Mappings
         public MappingProfile()
         {
             CreateMap<User, UserDto>();
-            CreateMap<CreateUserDto, User>();
-            CreateMap<UpdateUserDto, User>();
+            
+            CreateMap<CreateUserDto, User>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email));
+
+            CreateMap<UpdateUserDto, User>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email));
         }
     }
 }

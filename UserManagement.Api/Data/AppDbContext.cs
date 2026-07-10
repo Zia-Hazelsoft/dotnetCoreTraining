@@ -12,9 +12,6 @@ namespace UserManagement.Api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            // Keep the user table name as "Users"
-            builder.Entity<User>().ToTable("Users");
         }
     }
 }
