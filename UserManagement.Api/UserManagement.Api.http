@@ -14,12 +14,12 @@ Content-Type: application/json
 ###
 
 # Copy the value of $.data.token from the login response and paste it below:
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOlsiYWxpLmtoYW5AZXhhbXBsZS5jb20iLCJhbGkua2hhbkBleGFtcGxlLmNvbSJdLCJuYW1laWQiOiIxIiwiZ2l2ZW5fbmFtZSI6IkFsaSIsImZhbWlseV9uYW1lIjoiS2hhbiIsInVuaXF1ZV9uYW1lIjoiQWxpIEtoYW4iLCJuYmYiOjE3ODM1MTg4MTAsImV4cCI6MTc4MzUyMjQxMCwiaWF0IjoxNzgzNTE4ODEwLCJpc3MiOiJVc2VyTWFuYWdlbWVudEFwaSIsImF1ZCI6IlVzZXJNYW5hZ2VtZW50Q2xpZW50In0.EeRUdAnokfZc5a0tXZwfuYbEuWyJHnhtPx-u2qkCwSU
+# @token =
 ###
 
 # 2. Get Users (Paginated, Searchable, Sortable)
 # Try changing query parameters: pageNumber, pageSize, searchTerm, orderBy
-GET {{HostAddress}}/api/v1/users?pageNumber=2&pageSize=10&searchTerm=&orderBy=lastName desc
+GET {{HostAddress}}/api/v1/users?pageNumber=1&pageSize=10&searchTerm=Ali&orderBy=lastName desc
 Authorization: Bearer {{token}}
 
 ###

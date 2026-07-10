@@ -8,6 +8,7 @@ using UserManagement.Api.Data;
 using UserManagement.Api.Models;
 using UserManagement.Api.Repositories;
 using UserManagement.Api.Services;
+using UserManagement.Api.Services.Interfaces;
 
 namespace UserManagement.Api.Extensions
 {
@@ -93,9 +94,11 @@ namespace UserManagement.Api.Extensions
         // 5. Configure Repositories and Domain Services (Dependency Injection)
         public static void ConfigureCustomServices(this IServiceCollection services)
         {
-            services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
+            services.AddScoped<IRepositoryBase<User>, RepositoryBase<User>>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddTransient<IEmailSender, EmailSender>();
         }
     }
 }

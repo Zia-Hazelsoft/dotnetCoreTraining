@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 using UserManagement.Api.Common;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
-using UserManagement.Api.Services;
+using UserManagement.Api.Services.Interfaces;
 
 namespace UserManagement.Api.Controllers
 {
@@ -15,65 +18,141 @@ namespace UserManagement.Api.Controllers
     [Authorize]
     [ApiController]
     [Route(ApiRoutes.Users)]
-    public class UsersController(IUserService userService) : ControllerBase
+    public class UsersController(IUserService userService, ILogger<UsersController> logger) : BaseApiController
     {
         private readonly IUserService _userService = userService;
+        private readonly ILogger<UsersController> _logger = logger;
 
+        /// <summary>
+        /// Retrieves a paginated list of users filtered by search term and sorted.
+        /// </summary>
+        /// <param name="userParameters">The search, pagination, and sorting parameters.</param>
+        /// <returns>A paginated response containing matching users.</returns>
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<PaginatedResponseDto<UserDto>>>> GetAllUsers([FromQuery] UserParameters userParameters)
+        public async Task<IActionResult> GetAllUsers([FromQuery] UserParameters userParameters)
         {
-            var usersResult = await _userService.GetUsersAsync(userParameters);
-            return Ok(ApiResponse<PaginatedResponseDto<UserDto>>.SuccessResponse(usersResult, Messages.Success.RequestSuccessful));
+            try
+            {
+                var usersResult = await _userService.GetUsersAsync(userParameters);
+                return Ok(usersResult, Messages.Success.RequestSuccessful);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting all users with parameters: {@Params}", userParameters);
+                return InternalServerError(Messages.Error.Unexpected);
+            }
         }
 
+        /// <summary>
+        /// Retrieves a user by their unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user.</param>
+        /// <returns>The user details if found; otherwise, NotFound.</returns>
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<ApiResponse<UserDto>>> GetUserById(int id)
+        public async Task<IActionResult> GetUserById(int id)
         {
-            var user = await _userService.GetUserByIdAsync(id);
-
-            if (user is null)
+            try
             {
-                return NotFound(ApiResponse<UserDto>.FailureResponse(string.Format(Messages.Error.UserNotFound, id)));
-            }
+                var user = await _userService.GetUserByIdAsync(id);
 
-            return Ok(ApiResponse<UserDto>.SuccessResponse(user, Messages.Success.RequestSuccessful));
+                if (user is null)
+                {
+                    return NotFound(string.Format(Messages.Error.UserNotFound, id));
+                }
+
+                return Ok(user, Messages.Success.RequestSuccessful);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting user by id: {Id}", id);
+                return InternalServerError(Messages.Error.Unexpected);
+            }
         }
 
+        /// <summary>
+        /// Creates a new user without a password and sends a confirmation email.
+        /// </summary>
+        /// <param name="createUserDto">The details of the user to create.</param>
+        /// <returns>The created user and their email confirmation link.</returns>
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<UserDto>>> CreateUser([FromBody] CreateUserDto createUserDto)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createUserDto)
         {
-            var createdUser = await _userService.CreateUserAsync(createUserDto);
+            try
+            {
+                var response = await _userService.CreateUserAsync(createUserDto);
 
-            return CreatedAtAction(
-                nameof(GetUserById),
-                new { id = createdUser.Id },
-                ApiResponse<UserDto>.SuccessResponse(createdUser, Messages.Success.UserCreated));
+                return CreatedAtAction(
+                    nameof(GetUserById),
+                    new { id = response.User.Id },
+                    response,
+                    $"User created successfully. Confirmation Link: {response.ConfirmationLink}");
+            }
+            catch (ApplicationValidationException ex)
+            {
+                return BadRequest(ex.Message, ex.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating user with email: {Email}", createUserDto.Email);
+                return InternalServerError(Messages.Error.Unexpected);
+            }
         }
 
+        /// <summary>
+        /// Updates the profile details (name, email) of an existing user.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user to update.</param>
+        /// <param name="updateUserDto">The updated details.</param>
+        /// <returns>Ok if update succeeded; BadRequest or NotFound otherwise.</returns>
         [HttpPut("{id:int}")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateUser(int id, [FromBody] UpdateUserDto updateUserDto)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto updateUserDto)
         {
-            var wasUpdated = await _userService.UpdateUserAsync(id, updateUserDto);
-
-            if (!wasUpdated)
+            try
             {
-                return NotFound(ApiResponse<object>.FailureResponse(string.Format(Messages.Error.UserNotFound, id)));
-            }
+                var wasUpdated = await _userService.UpdateUserAsync(id, updateUserDto);
 
-            return Ok(ApiResponse<object>.SuccessResponse(new { }, Messages.Success.UserUpdated));
+                if (!wasUpdated)
+                {
+                    return NotFound(string.Format(Messages.Error.UserNotFound, id));
+                }
+
+                return Ok(Messages.Success.UserUpdated);
+            }
+            catch (ApplicationValidationException ex)
+            {
+                return BadRequest(ex.Message, ex.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating user: {Id}", id);
+                return InternalServerError(Messages.Error.Unexpected);
+            }
         }
 
+        /// <summary>
+        /// Deletes a user by their unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user to delete.</param>
+        /// <returns>Ok if deleted; NotFound otherwise.</returns>
         [HttpDelete("{id:int}")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var wasDeleted = await _userService.DeleteUserAsync(id);
-
-            if (!wasDeleted)
+            try
             {
-                return NotFound(ApiResponse<object>.FailureResponse(string.Format(Messages.Error.UserNotFound, id)));
-            }
+                var wasDeleted = await _userService.DeleteUserAsync(id);
 
-            return Ok(ApiResponse<object>.SuccessResponse(new { }, Messages.Success.UserDeleted));
+                if (!wasDeleted)
+                {
+                    return NotFound(string.Format(Messages.Error.UserNotFound, id));
+                }
+
+                return Ok(Messages.Success.UserDeleted);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting user: {Id}", id);
+                return InternalServerError(Messages.Error.Unexpected);
+            }
         }
     }
 }

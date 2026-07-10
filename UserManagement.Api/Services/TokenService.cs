@@ -1,15 +1,28 @@
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 using UserManagement.Api.Models;
+using UserManagement.Api.Services.Interfaces;
 
 namespace UserManagement.Api.Services
 {
+    /// <summary>
+    /// Implements JSON Web Token (JWT) generation services for user sessions.
+    /// </summary>
     public class TokenService(IConfiguration config) : ITokenService
     {
         private readonly IConfiguration _config = config;
 
+        /// <summary>
+        /// Generates a signed, encrypted JWT security token containing claims for user profile data.
+        /// </summary>
+        /// <param name="user">The user context payload.</param>
+        /// <returns>A signed string representation of the JWT token.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the JWT Secret Key is missing in the configuration.</exception>
         public string GenerateToken(User user)
         {
             var jwtSettings = _config.GetSection("Jwt");
