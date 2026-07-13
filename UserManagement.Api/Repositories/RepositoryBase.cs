@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserManagement.Api.Common;
 using UserManagement.Api.Data;
+using UserManagement.Api.Extensions;
 
 namespace UserManagement.Api.Repositories
 {
@@ -56,12 +57,13 @@ namespace UserManagement.Api.Repositories
         public async Task<T?> GetByIdAsync(int id) => await RepositoryContext.Set<T>().FindAsync(id);
 
         /// <summary>
-        /// Retrieves a paginated, searched, and sorted list of entities.
+        /// Retrieves a paginated, filtered, searched, and sorted list of entities.
         /// </summary>
         /// <param name="pageNumber">The index of the page to retrieve (1-based).</param>
         /// <param name="pageSize">The number of items per page.</param>
         /// <param name="searchTerm">The search term filter.</param>
         /// <param name="searchFields">The fields to match the search term against.</param>
+        /// <param name="filterString">The string containing comma-separated filter clauses.</param>
         /// <param name="orderBy">The sorting order string.</param>
         /// <param name="defaultSortProperty">The fallback sorting property when orderBy is omitted.</param>
         /// <param name="trackChanges">Whether EF Core change tracking is enabled.</param>
@@ -71,12 +73,14 @@ namespace UserManagement.Api.Repositories
             int pageSize,
             string? searchTerm,
             string[] searchFields,
+            string? filterString,
             string? orderBy,
             string defaultSortProperty,
             bool trackChanges = false)
         {
-            var query = FindAll(trackChanges);
+            IQueryable<T> query = FindAll(trackChanges);
 
+            query = query.Filter(filterString);
             query = query.Search(searchTerm, searchFields);
             query = query.Sort(orderBy, defaultSortProperty);
 

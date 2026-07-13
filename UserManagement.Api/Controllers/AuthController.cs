@@ -30,7 +30,7 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var authResult = await _authService.LoginAsync(loginDto);
+                AuthResponseDto? authResult = await _authService.LoginAsync(loginDto);
                 if (authResult == null)
                 {
                     return Unauthorized(Messages.Error.InvalidCredentials);
@@ -84,13 +84,13 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ActivationTemplate.html");
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ActivationTemplate.html");
                 if (!System.IO.File.Exists(filePath))
                 {
                     return NotFound("Activation template not found.");
                 }
 
-                var html = await System.IO.File.ReadAllTextAsync(filePath);
+                string html = await System.IO.File.ReadAllTextAsync(filePath);
                 
                 // Replace placeholders safely
                 html = html.Replace("{email}", email)

@@ -40,8 +40,8 @@ namespace UserManagement.Api.Extensions
         // 3. Configure JWT Authentication
         public static void ConfigureJwt(this IServiceCollection services, IConfiguration configuration)
         {
-            var jwtSettings = configuration.GetSection("Jwt");
-            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured."));
+            IConfigurationSection jwtSettings = configuration.GetSection("Jwt");
+            byte[] key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured."));
 
             services.AddAuthentication(options =>
             {

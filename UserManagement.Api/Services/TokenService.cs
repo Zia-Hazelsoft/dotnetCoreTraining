@@ -25,12 +25,12 @@ namespace UserManagement.Api.Services
         /// <exception cref="InvalidOperationException">Thrown if the JWT Secret Key is missing in the configuration.</exception>
         public string GenerateToken(User user)
         {
-            var jwtSettings = _config.GetSection("Jwt");
-            var keyStr = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured.");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            IConfigurationSection jwtSettings = _config.GetSection("Jwt");
+            string keyStr = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured.");
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
+            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new List<Claim>
+            List<Claim> claims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
@@ -41,10 +41,10 @@ namespace UserManagement.Api.Services
                 new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
             };
 
-            var expiryMinutes = double.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
-            var expiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
+            double expiryMinutes = double.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
+            DateTime expiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = expiry,
@@ -53,8 +53,8 @@ namespace UserManagement.Api.Services
                 SigningCredentials = creds
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
         }

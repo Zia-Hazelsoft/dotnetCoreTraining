@@ -23,17 +23,17 @@ namespace UserManagement.Api.Services
         /// <returns>A task representing the asynchronous email dispatch operation.</returns>
         public async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
         {
-            var emailSettings = _config.GetSection("EmailSettings");
+            IConfigurationSection emailSettings = _config.GetSection("EmailSettings");
             
-            var message = new MimeMessage();
+            MimeMessage message = new MimeMessage();
             message.From.Add(new MailboxAddress(emailSettings["SenderName"] ?? "Portal", emailSettings["SenderEmail"] ?? string.Empty));
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = subject;
 
-            var bodyBuilder = new BodyBuilder { HtmlBody = htmlMessage };
+            BodyBuilder bodyBuilder = new BodyBuilder { HtmlBody = htmlMessage };
             message.Body = bodyBuilder.ToMessageBody();
 
-            using var client = new SmtpClient();
+            using SmtpClient client = new SmtpClient();
             
             // Connect to SendGrid SMTP server using StartTLS on port 587
             await client.ConnectAsync(emailSettings["SmtpServer"] ?? string.Empty, int.Parse(emailSettings["Port"] ?? "587"), MailKit.Security.SecureSocketOptions.StartTls);

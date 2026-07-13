@@ -8,7 +8,7 @@ using UserManagement.Api.Models;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Extensions;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -19,12 +19,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
     {
-        var errors = context.ModelState.Values
+        List<string> errors = context.ModelState.Values
             .SelectMany(v => v.Errors)
             .Select(e => e.ErrorMessage)
             .ToList();
 
-        var response = ApiResponse<object>.FailureResponse(Messages.Error.ValidationFailed, errors);
+        ApiResponse<object> response = ApiResponse<object>.FailureResponse(Messages.Error.ValidationFailed, errors);
         return new BadRequestObjectResult(response);
     };
 });
@@ -39,13 +39,13 @@ builder.Services.ConfigureCustomServices();
 // AutoMapper
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Migrate database on startup.
-using (var scope = app.Services.CreateScope())
+using (IServiceScope scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    var db = services.GetRequiredService<AppDbContext>();
+    IServiceProvider services = scope.ServiceProvider;
+    AppDbContext db = services.GetRequiredService<AppDbContext>();
 
     // Apply database migrations automatically (useful during development when tables are added)
     db.Database.Migrate();

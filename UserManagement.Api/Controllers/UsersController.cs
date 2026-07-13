@@ -33,8 +33,12 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var usersResult = await _userService.GetUsersAsync(userParameters);
+                PaginatedResponseDto<UserDto> usersResult = await _userService.GetUsersAsync(userParameters);
                 return Ok(usersResult, Messages.Success.RequestSuccessful);
+            }
+            catch (ApplicationValidationException ex)
+            {
+                return BadRequest(ex.Message, ex.Errors);
             }
             catch (Exception ex)
             {
@@ -53,7 +57,7 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var user = await _userService.GetUserByIdAsync(id);
+                UserDto? user = await _userService.GetUserByIdAsync(id);
 
                 if (user is null)
                 {
@@ -79,7 +83,7 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var response = await _userService.CreateUserAsync(createUserDto);
+                CreateUserResponseDto response = await _userService.CreateUserAsync(createUserDto);
 
                 return CreatedAtAction(
                     nameof(GetUserById),
@@ -109,7 +113,7 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var wasUpdated = await _userService.UpdateUserAsync(id, updateUserDto);
+                bool wasUpdated = await _userService.UpdateUserAsync(id, updateUserDto);
 
                 if (!wasUpdated)
                 {
@@ -139,7 +143,7 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                var wasDeleted = await _userService.DeleteUserAsync(id);
+                bool wasDeleted = await _userService.DeleteUserAsync(id);
 
                 if (!wasDeleted)
                 {

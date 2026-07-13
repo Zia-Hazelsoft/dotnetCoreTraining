@@ -29,16 +29,17 @@ namespace UserManagement.Api.Services
 
         public async Task<PaginatedResponseDto<UserDto>> GetUsersAsync(UserParameters userParameters)
         {
-            var pagedUsers = await _userRepository.GetPagedAsync(
+            PagedList<User> pagedUsers = await _userRepository.GetPagedAsync(
                 userParameters.PageNumber,
                 userParameters.PageSize,
                 userParameters.SearchTerm,
                 [nameof(User.FirstName), nameof(User.LastName), nameof(User.Email)],
+                userParameters.Filters,
                 userParameters.OrderBy,
                 nameof(User.Id),
                 trackChanges: false);
 
-            var userDtos = _mapper.Map<IEnumerable<UserDto>>(pagedUsers);
+            IEnumerable<UserDto> userDtos = _mapper.Map<IEnumerable<UserDto>>(pagedUsers);
 
             return new PaginatedResponseDto<UserDto>
             {
@@ -49,33 +50,33 @@ namespace UserManagement.Api.Services
 
         public async Task<UserDto?> GetUserByIdAsync(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            User? user = await _userRepository.GetByIdAsync(id);
             return user is null ? null : _mapper.Map<UserDto>(user);
         }
 
         public async Task<CreateUserResponseDto> CreateUserAsync(CreateUserDto createUserDto)
         {
-            var newUser = _mapper.Map<User>(createUserDto);
+            User newUser = _mapper.Map<User>(createUserDto);
 
-            var result = await _userManager.CreateAsync(newUser);
+            IdentityResult result = await _userManager.CreateAsync(newUser);
             if (!result.Succeeded)
             {
-                var errors = result.Errors.Select(e => e.Description).ToList();
+                List<string> errors = result.Errors.Select(e => e.Description).ToList();
                 throw new ApplicationValidationException(Messages.Error.UserCreationFailed, errors);
             }
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
+            string token = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
             
             // Generate link dynamically using the current request host and schema
-            var request = _httpContextAccessor.HttpContext?.Request;
-            var baseUrl = request != null ? $"{request.Scheme}://{request.Host}" : "http://localhost:5067";
-            var confirmationLink = $"{baseUrl}/api/v1/auth/confirm-registration?email={newUser.Email}&token={Uri.EscapeDataString(token)}";
+            HttpRequest? request = _httpContextAccessor.HttpContext?.Request;
+            string baseUrl = request != null ? $"{request.Scheme}://{request.Host}" : "http://localhost:5067";
+            string confirmationLink = $"{baseUrl}/api/v1/auth/confirm-registration?email={newUser.Email}&token={Uri.EscapeDataString(token)}";
 
             _logger.LogInformation("New user registration. Email: {Email}, Confirmation Link: {Link}", newUser.Email, confirmationLink);
 
             // Compose HTML Email Content
-            var subject = "Welcome! Confirm your registration and set your password";
-            var htmlBody = $@"
+            string subject = "Welcome! Confirm your registration and set your password";
+            string htmlBody = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>
                     <h2 style='color: #333;'>Welcome to the System, {newUser.FirstName}!</h2>
                     <p>An account has been created for you. To complete your registration and set your password, please click the button below:</p>
@@ -99,7 +100,7 @@ namespace UserManagement.Api.Services
                 }
             });
 
-            var userDto = _mapper.Map<UserDto>(newUser);
+            UserDto userDto = _mapper.Map<UserDto>(newUser);
 
             return new CreateUserResponseDto
             {
@@ -110,31 +111,13 @@ namespace UserManagement.Api.Services
 
         public async Task<bool> UpdateUserAsync(int id, UpdateUserDto updateUserDto)
         {
-            var existingUser = await _userRepository.GetByIdAsync(id);
+            User? existingUser = await _userRepository.GetByIdAsync(id);
             if (existingUser is null)
             {
                 return false;
             }
 
-            // Check if email is changing and if the new email is already in use by another user
-            if (!string.Equals(existingUser.Email, updateUserDto.Email, StringComparison.OrdinalIgnoreCase))
-            {
-                var userWithEmail = await _userManager.FindByEmailAsync(updateUserDto.Email);
-                if (userWithEmail != null && userWithEmail.Id != existingUser.Id)
-                {
-                    throw new ApplicationValidationException(Messages.Error.EmailAlreadyExists);
-                }
-            }
-
             _mapper.Map(updateUserDto, existingUser);
-
-            // Update Identity normalized fields since email has changed
-            if (existingUser.Email != null)
-            {
-                existingUser.NormalizedEmail = existingUser.Email.ToUpperInvariant();
-                existingUser.UserName = existingUser.Email;
-                existingUser.NormalizedUserName = existingUser.Email.ToUpperInvariant();
-            }
 
             _userRepository.Update(existingUser);
             await _userRepository.SaveAsync();
@@ -143,7 +126,7 @@ namespace UserManagement.Api.Services
 
         public async Task<bool> DeleteUserAsync(int id)
         {
-            var existingUser = await _userRepository.GetByIdAsync(id);
+            User? existingUser = await _userRepository.GetByIdAsync(id);
             if (existingUser is null)
             {
                 return false;

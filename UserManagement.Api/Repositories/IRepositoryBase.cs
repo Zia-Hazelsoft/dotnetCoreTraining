@@ -49,12 +49,13 @@ namespace UserManagement.Api.Repositories
         Task<T?> GetByIdAsync(int id);
 
         /// <summary>
-        /// Retrieves a paginated, searched, and sorted list of entities.
+        /// Retrieves a paginated, filtered, searched, and sorted list of entities.
         /// </summary>
         /// <param name="pageNumber">The index of the page to retrieve (1-based).</param>
         /// <param name="pageSize">The number of items per page.</param>
         /// <param name="searchTerm">The search term filter.</param>
         /// <param name="searchFields">The fields to match the search term against.</param>
+        /// <param name="filterString">The string containing comma-separated filter clauses.</param>
         /// <param name="orderBy">The sorting order string.</param>
         /// <param name="defaultSortProperty">The fallback sorting property when orderBy is omitted.</param>
         /// <param name="trackChanges">Whether EF Core change tracking is enabled.</param>
@@ -64,6 +65,7 @@ namespace UserManagement.Api.Repositories
             int pageSize,
             string? searchTerm,
             string[] searchFields,
+            string? filterString,
             string? orderBy,
             string defaultSortProperty,
             bool trackChanges = false);

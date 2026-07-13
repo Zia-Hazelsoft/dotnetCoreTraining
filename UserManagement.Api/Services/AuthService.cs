@@ -32,7 +32,7 @@ namespace UserManagement.Api.Services
         /// <exception cref="ApplicationValidationException">Thrown when the user's email has not been confirmed.</exception>
         public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
         {
-            var user = await _userManager.FindByEmailAsync(loginDto.Email);
+            User? user = await _userManager.FindByEmailAsync(loginDto.Email);
             if (user == null)
             {
                 return null;
@@ -48,8 +48,8 @@ namespace UserManagement.Api.Services
                 return null;
             }
 
-            var token = _tokenService.GenerateToken(user);
-            var userDto = _mapper.Map<UserDto>(user);
+            string token = _tokenService.GenerateToken(user);
+            UserDto userDto = _mapper.Map<UserDto>(user);
 
             return new AuthResponseDto
             {
@@ -65,7 +65,7 @@ namespace UserManagement.Api.Services
         /// <exception cref="ApplicationValidationException">Thrown if user is not found, email is already verified, or token validation/password hashing fails.</exception>
         public async Task ConfirmRegistrationAsync(ConfirmRegistrationDto confirmRegistrationDto)
         {
-            var user = await _userManager.FindByEmailAsync(confirmRegistrationDto.Email);
+            User? user = await _userManager.FindByEmailAsync(confirmRegistrationDto.Email);
             if (user == null)
             {
                 throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, new List<string> { "User not found." });
@@ -76,21 +76,21 @@ namespace UserManagement.Api.Services
                 throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, new List<string> { "Email is already confirmed." });
             }
 
-            var confirmResult = await _userManager.ConfirmEmailAsync(user, confirmRegistrationDto.Token);
+            IdentityResult confirmResult = await _userManager.ConfirmEmailAsync(user, confirmRegistrationDto.Token);
             if (!confirmResult.Succeeded)
             {
-                var errors = confirmResult.Errors.Select(e => e.Description).ToList();
+                List<string> errors = confirmResult.Errors.Select(e => e.Description).ToList();
                 throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, errors);
             }
 
-            var passwordResult = await _userManager.AddPasswordAsync(user, confirmRegistrationDto.Password);
+            IdentityResult passwordResult = await _userManager.AddPasswordAsync(user, confirmRegistrationDto.Password);
             if (!passwordResult.Succeeded)
             {
                 // Roll back email confirmation state if password set fails so user can try again
                 user.EmailConfirmed = false;
                 await _userManager.UpdateAsync(user);
 
-                var errors = passwordResult.Errors.Select(e => e.Description).ToList();
+                List<string> errors = passwordResult.Errors.Select(e => e.Description).ToList();
                 throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, errors);
             }
         }

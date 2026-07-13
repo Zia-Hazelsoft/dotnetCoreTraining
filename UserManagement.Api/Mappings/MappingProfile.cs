@@ -16,8 +16,7 @@ namespace UserManagement.Api.Mappings
             CreateMap<CreateUserDto, User>()
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email));
 
-            CreateMap<UpdateUserDto, User>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email));
+            CreateMap<UpdateUserDto, User>();
         }
     }
 }

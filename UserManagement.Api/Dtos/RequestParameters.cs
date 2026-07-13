@@ -12,5 +12,9 @@ namespace UserManagement.Api.Dtos
             get => _pageSize;
             set => _pageSize = (value > MaxPageSize) ? MaxPageSize : value;
         }
+        /// <summary>
+        /// Comma-separated dynamic filters (e.g. "Email==test@example.com,Id>5").
+        /// </summary>
+        public string? Filters { get; set; }
     }
 }
