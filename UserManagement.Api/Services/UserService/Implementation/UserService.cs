@@ -59,8 +59,8 @@ namespace UserManagement.Api.Services.UserService.Implementation
             IdentityResult result = await _userManager.CreateAsync(newUser);
             if (!result.Succeeded)
             {
-                List<string> errors = result.Errors.Select(e => e.Description).ToList();
-                throw new ApplicationValidationException(Messages.Error.UserCreationFailed, errors);
+                string errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new ArgumentException(errors);
             }
 
             string token = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
