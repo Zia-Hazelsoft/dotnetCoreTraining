@@ -5,18 +5,21 @@ namespace UserManagement.Api.Constants
         public static class Error
         {
             public const string Unexpected = "An unexpected error occurred on the server.";
-            public const string UserNotFound = "User with id {0} was not found.";
+            public const string UserNotFound = "User not Found.";
             public const string UserCreationFailed = "User creation failed.";
             public const string ValidationFailed = "Validation failed.";
             public const string InvalidCredentials = "Invalid email or password.";
             public const string EmailNotConfirmed = "Please confirm your email address before logging in.";
             public const string ConfirmRegisterFailed = "Registration confirmation failed.";
             public const string EmailAlreadyExists = "Email address is already in use.";
+            public const string EmailAlreadyConfirmed = "Email is already confirmed.";
+            public const string ActivationTemplateNotFound = "Activation template not found.";
         }
 
         public static class Success
         {
             public const string UserCreated = "User created successfully.";
+            public const string UserCreatedWithEmailLink = "User created successfully. A confirmation link has been sent to your email.";
             public const string UserUpdated = "User updated successfully.";
             public const string UserDeleted = "User deleted successfully.";
             public const string RequestSuccessful = "Request successful";

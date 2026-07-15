@@ -1,9 +1,8 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using UserManagement.Api.Common;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Models;
@@ -29,23 +28,19 @@ namespace UserManagement.Api.Services.AuthService.Implementation
         /// </summary>
         /// <param name="loginDto">The email and password payload.</param>
         /// <returns>An <see cref="AuthResponseDto"/> if login succeeds; null if credentials are invalid.</returns>
-        /// <exception cref="ApplicationValidationException">Thrown when the user's email has not been confirmed.</exception>
-        public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
+        /// <exception cref="ArgumentException">Thrown when the user's email has not been confirmed.</exception>
+        public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
         {
             User? user = await _userManager.FindByEmailAsync(loginDto.Email);
-            if (user == null)
+
+            if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
             {
-                return null;
+                throw new ArgumentException(Messages.Error.InvalidCredentials);
             }
 
             if (!user.EmailConfirmed)
             {
-                throw new ApplicationValidationException(Messages.Error.EmailNotConfirmed);
-            }
-
-            if (!await _userManager.CheckPasswordAsync(user, loginDto.Password))
-            {
-                return null;
+                throw new ArgumentException(Messages.Error.EmailNotConfirmed);
             }
 
             string token = _tokenService.GenerateToken(user);
@@ -62,25 +57,22 @@ namespace UserManagement.Api.Services.AuthService.Implementation
         /// Confirms a user's registration by validating their email confirmation token and setting their password.
         /// </summary>
         /// <param name="confirmRegistrationDto">The email, token, and new password payload.</param>
-        /// <exception cref="ApplicationValidationException">Thrown if user is not found, email is already verified, or token validation/password hashing fails.</exception>
+        /// <exception cref="ArgumentException">Thrown if user is not found, email is already verified, or token validation/password hashing fails.</exception>
         public async Task ConfirmRegistrationAsync(ConfirmRegistrationDto confirmRegistrationDto)
         {
-            User? user = await _userManager.FindByEmailAsync(confirmRegistrationDto.Email);
-            if (user == null)
-            {
-                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, ["User not found."]);
-            }
+            User? user = await _userManager.FindByEmailAsync(confirmRegistrationDto.Email) 
+                ?? throw new ArgumentException(Messages.Error.UserNotFound);
 
             if (user.EmailConfirmed)
             {
-                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, ["Email is already confirmed."]);
+                throw new ArgumentException(Messages.Error.EmailAlreadyConfirmed);
             }
 
             IdentityResult confirmResult = await _userManager.ConfirmEmailAsync(user, confirmRegistrationDto.Token);
             if (!confirmResult.Succeeded)
             {
-                List<string> errors = [.. confirmResult.Errors.Select(e => e.Description)];
-                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, errors);
+                string errors = string.Join(", ", confirmResult.Errors.Select(e => e.Description));
+                throw new ArgumentException(errors);
             }
 
             IdentityResult passwordResult = await _userManager.AddPasswordAsync(user, confirmRegistrationDto.Password);
@@ -88,10 +80,9 @@ namespace UserManagement.Api.Services.AuthService.Implementation
             {
                 // Roll back email confirmation state if password set fails so user can try again
                 user.EmailConfirmed = false;
-                await _userManager.UpdateAsync(user);
-
-                List<string> errors = passwordResult.Errors.Select(e => e.Description).ToList();
-                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, errors);
+                
+                string errors = string.Join(", ", passwordResult.Errors.Select(e => e.Description));
+                throw new ArgumentException(errors);
             }
         }
     }

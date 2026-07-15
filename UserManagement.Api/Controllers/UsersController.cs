@@ -36,14 +36,10 @@ namespace UserManagement.Api.Controllers
                 PaginatedResponseDto<UserDto> usersResult = await _userService.GetUsersAsync(userParameters);
                 return Ok(usersResult, Messages.Success.RequestSuccessful);
             }
-            catch (ApplicationValidationException ex)
-            {
-                return BadRequest(ex.Message, ex.Errors);
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while getting all users with parameters: {@Params}", userParameters);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -69,7 +65,7 @@ namespace UserManagement.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while getting user by id: {Id}", id);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -77,7 +73,7 @@ namespace UserManagement.Api.Controllers
         /// Creates a new user without a password and sends a confirmation email.
         /// </summary>
         /// <param name="createUserDto">The details of the user to create.</param>
-        /// <returns>The created user and their email confirmation link.</returns>
+        /// <returns>The created user.</returns>
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createUserDto)
         {
@@ -85,20 +81,12 @@ namespace UserManagement.Api.Controllers
             {
                 CreateUserResponseDto response = await _userService.CreateUserAsync(createUserDto);
 
-                return CreatedAtAction(
-                    nameof(GetUserById),
-                    new { id = response.User.Id },
-                    response,
-                    "User created successfully. A confirmation link has been sent to your email.");
-            }
-            catch (ApplicationValidationException ex)
-            {
-                return BadRequest(ex.Message, ex.Errors);
+                return Ok(response, Messages.Success.UserCreatedWithEmailLink);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while creating user with email: {Email}", createUserDto.Email);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -122,14 +110,10 @@ namespace UserManagement.Api.Controllers
 
                 return Ok(Messages.Success.UserUpdated);
             }
-            catch (ApplicationValidationException ex)
-            {
-                return BadRequest(ex.Message, ex.Errors);
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while updating user: {Id}", id);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -155,7 +139,7 @@ namespace UserManagement.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while deleting user: {Id}", id);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
     }

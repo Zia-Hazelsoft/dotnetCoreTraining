@@ -1,10 +1,7 @@
 using Sieve.Exceptions;
 using Sieve.Models;
 using Sieve.Services;
-using System;
-using System.Linq;
 using System.Linq.Dynamic.Core;
-using UserManagement.Api.Common;
 
 namespace UserManagement.Api.Extensions
 {
@@ -27,6 +24,7 @@ namespace UserManagement.Api.Extensions
             string filterExpression = string.Join(" or ", propertyNames.Select(p => $"{p} != null and {p}.ToLower().Contains(@0)"));
 
             return source.Where(filterExpression, lowerCaseTerm);
+
         }
 
         /// <summary>
@@ -58,7 +56,7 @@ namespace UserManagement.Api.Extensions
             }
             catch (SieveException ex)
             {
-                throw new ApplicationValidationException("Invalid filter parameters.", [ex.Message]);
+                throw new ArgumentException(ex.Message);
             }
         }
     }

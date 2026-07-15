@@ -1,4 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using UserManagement.Api.Common;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
@@ -16,6 +20,9 @@ namespace UserManagement.Api.Controllers
         private readonly IAuthService _authService = authService;
         private readonly ILogger<AuthController> _logger = logger;
 
+        private const string TemplatesFolder = "Templates";
+        private const string ActivationTemplateFile = "ActivationTemplate.html";
+
         /// <summary>
         /// Authenticates a user using their email and password, returning a JWT token if successful.
         /// </summary>
@@ -26,22 +33,14 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                AuthResponseDto? authResult = await _authService.LoginAsync(loginDto);
-                if (authResult == null)
-                {
-                    return Unauthorized(Messages.Error.InvalidCredentials);
-                }
+                AuthResponseDto authResult = await _authService.LoginAsync(loginDto);
 
                 return Ok(authResult, Messages.Success.LoginSuccessful);
-            }
-            catch (ApplicationValidationException ex)
-            {
-                return BadRequest(ex.Message, ex.Errors);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during login for user: {Email}", loginDto.Email);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -58,14 +57,10 @@ namespace UserManagement.Api.Controllers
                 await _authService.ConfirmRegistrationAsync(confirmDto);
                 return Ok(Messages.Success.RegistrationConfirmed);
             }
-            catch (ApplicationValidationException ex)
-            {
-                return BadRequest(ex.Message, ex.Errors);
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during registration confirmation for user: {Email}", confirmDto.Email);
-                return InternalServerError(Messages.Error.Unexpected);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -80,10 +75,10 @@ namespace UserManagement.Api.Controllers
         {
             try
             {
-                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ActivationTemplate.html");
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), TemplatesFolder, ActivationTemplateFile);
                 if (!System.IO.File.Exists(filePath))
                 {
-                    return NotFound("Activation template not found.");
+                    return NotFound(Messages.Error.ActivationTemplateNotFound);
                 }
 
                 string html = await System.IO.File.ReadAllTextAsync(filePath);
@@ -97,7 +92,7 @@ namespace UserManagement.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while loading activation page for {Email}", email);
-                return InternalServerError(Messages.Error.Unexpected);
+                return StatusCode(500, Messages.Error.Unexpected);
             }
         }
     }

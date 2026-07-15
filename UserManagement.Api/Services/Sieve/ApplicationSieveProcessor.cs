@@ -8,14 +8,9 @@ namespace UserManagement.Api.Services
     /// <summary>
     /// Custom Sieve Processor defining filterable and sortable properties for the application.
     /// </summary>
-    public class ApplicationSieveProcessor : SieveProcessor
+    public class ApplicationSieveProcessor(
+        IOptions<SieveOptions> options) : SieveProcessor(options)
     {
-        public ApplicationSieveProcessor(
-            IOptions<SieveOptions> options) 
-            : base(options)
-        {
-        }
-
         protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
         {
             // Map User properties for filtering and sorting
