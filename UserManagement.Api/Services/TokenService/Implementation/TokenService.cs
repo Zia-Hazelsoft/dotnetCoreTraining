@@ -1,21 +1,22 @@
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using UserManagement.Api.Configuration;
 using UserManagement.Api.Models;
-using UserManagement.Api.Services.Interfaces;
+using UserManagement.Api.Services.TokenService;
 
-namespace UserManagement.Api.Services
+namespace UserManagement.Api.Services.TokenService.Implementation
 {
     /// <summary>
     /// Implements JSON Web Token (JWT) generation services for user sessions.
     /// </summary>
-    public class TokenService(IConfiguration config) : ITokenService
+    public class TokenService(IOptions<JwtSettings> jwtOptions) : ITokenService
     {
-        private readonly IConfiguration _config = config;
+        private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
         /// <summary>
         /// Generates a signed, encrypted JWT security token containing claims for user profile data.
@@ -25,13 +26,12 @@ namespace UserManagement.Api.Services
         /// <exception cref="InvalidOperationException">Thrown if the JWT Secret Key is missing in the configuration.</exception>
         public string GenerateToken(User user)
         {
-            IConfigurationSection jwtSettings = _config.GetSection("Jwt");
-            string keyStr = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured.");
-            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
-            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            string keyStr = _jwtSettings.Key ?? throw new InvalidOperationException("JWT Secret Key is not configured.");
+            SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(keyStr));
+            SigningCredentials creds = new(key, SecurityAlgorithms.HmacSha256);
 
-            List<Claim> claims = new List<Claim>
-            {
+            List<Claim> claims =
+            [
                 new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -39,21 +39,20 @@ namespace UserManagement.Api.Services
                 new(ClaimTypes.GivenName, user.FirstName),
                 new(ClaimTypes.Surname, user.LastName),
                 new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
-            };
+            ];
 
-            double expiryMinutes = double.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
-            DateTime expiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
+            DateTime expiry = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryInMinutes);
 
-            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+            SecurityTokenDescriptor tokenDescriptor = new()
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = expiry,
-                Issuer = jwtSettings["Issuer"],
-                Audience = jwtSettings["Audience"],
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
                 SigningCredentials = creds
             };
 
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            JwtSecurityTokenHandler tokenHandler = new();
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);

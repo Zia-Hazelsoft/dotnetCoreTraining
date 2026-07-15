@@ -5,10 +5,15 @@ using UserManagement.Api.Common;
 using UserManagement.Api.Data;
 using UserManagement.Api.Mappings;
 using UserManagement.Api.Models;
+using UserManagement.Api.Configuration;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+// Strongly-typed options registration
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(EmailSettings.SectionName));
 
 // Add services to the container.
 builder.Services.AddControllers();

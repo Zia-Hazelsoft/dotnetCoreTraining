@@ -5,5 +5,6 @@ namespace UserManagement.Api.Constants
         public const string Base = "api/v1";
         public const string Users = Base + "/users";
         public const string Auth = Base + "/auth";
+        public const string ConfirmRegistrationPath = Auth + "/confirm-registration";
     }
 }

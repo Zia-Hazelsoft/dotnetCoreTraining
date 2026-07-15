@@ -7,9 +7,9 @@ using UserManagement.Api.Common;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Models;
-using UserManagement.Api.Services.Interfaces;
+using UserManagement.Api.Services.TokenService;
 
-namespace UserManagement.Api.Services
+namespace UserManagement.Api.Services.AuthService.Implementation
 {
     /// <summary>
     /// Implements authentication business logic, wrapping login credential verification 
@@ -68,18 +68,18 @@ namespace UserManagement.Api.Services
             User? user = await _userManager.FindByEmailAsync(confirmRegistrationDto.Email);
             if (user == null)
             {
-                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, new List<string> { "User not found." });
+                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, ["User not found."]);
             }
 
             if (user.EmailConfirmed)
             {
-                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, new List<string> { "Email is already confirmed." });
+                throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, ["Email is already confirmed."]);
             }
 
             IdentityResult confirmResult = await _userManager.ConfirmEmailAsync(user, confirmRegistrationDto.Token);
             if (!confirmResult.Succeeded)
             {
-                List<string> errors = confirmResult.Errors.Select(e => e.Description).ToList();
+                List<string> errors = [.. confirmResult.Errors.Select(e => e.Description)];
                 throw new ApplicationValidationException(Messages.Error.ConfirmRegisterFailed, errors);
             }
 

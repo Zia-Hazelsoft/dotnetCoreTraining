@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using UserManagement.Api.Common;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
-using UserManagement.Api.Services.Interfaces;
+using UserManagement.Api.Services.UserService;
 
 namespace UserManagement.Api.Controllers
 {
@@ -89,7 +89,7 @@ namespace UserManagement.Api.Controllers
                     nameof(GetUserById),
                     new { id = response.User.Id },
                     response,
-                    $"User created successfully. Confirmation Link: {response.ConfirmationLink}");
+                    "User created successfully. A confirmation link has been sent to your email.");
             }
             catch (ApplicationValidationException ex)
             {

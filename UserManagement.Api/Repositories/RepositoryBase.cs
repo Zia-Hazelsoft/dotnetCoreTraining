@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sieve.Services;
 using System.Linq;
 using System.Threading.Tasks;
 using UserManagement.Api.Common;
@@ -11,12 +12,16 @@ namespace UserManagement.Api.Repositories
     /// Implements generic database persistence operations and pagination logic backed by EF Core.
     /// </summary>
     /// <typeparam name="T">The database entity type.</typeparam>
-    public class RepositoryBase<T>(AppDbContext repositoryContext) : IRepositoryBase<T> where T : class
+    public class RepositoryBase<T>(
+        AppDbContext repositoryContext,
+        ISieveProcessor sieveProcessor) : IRepositoryBase<T> where T : class
     {
         /// <summary>
         /// Gets or sets the EF Core database context.
         /// </summary>
         protected AppDbContext RepositoryContext { get; set; } = repositoryContext;
+
+        private readonly ISieveProcessor _sieveProcessor = sieveProcessor;
 
         /// <summary>
         /// Retrieves all records of type T from the database context.
@@ -80,7 +85,7 @@ namespace UserManagement.Api.Repositories
         {
             IQueryable<T> query = FindAll(trackChanges);
 
-            query = query.Filter(filterString);
+            query = query.Filter(_sieveProcessor, filterString);
             query = query.Search(searchTerm, searchFields);
             query = query.Sort(orderBy, defaultSortProperty);
 

@@ -7,8 +7,17 @@ using Microsoft.OpenApi;
 using UserManagement.Api.Data;
 using UserManagement.Api.Models;
 using UserManagement.Api.Repositories;
+using UserManagement.Api.Services.AuthService;
+using UserManagement.Api.Services.AuthService.Implementation;
+using UserManagement.Api.Services.EmailService;
+using UserManagement.Api.Services.EmailService.Implementation;
+using UserManagement.Api.Services.TokenService;
+using UserManagement.Api.Services.TokenService.Implementation;
+using UserManagement.Api.Services.UserService;
+using UserManagement.Api.Services.UserService.Implementation;
+using Sieve.Models;
+using Sieve.Services;
 using UserManagement.Api.Services;
-using UserManagement.Api.Services.Interfaces;
 
 namespace UserManagement.Api.Extensions
 {
@@ -98,7 +107,12 @@ namespace UserManagement.Api.Extensions
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddTransient<IEmailSender, EmailSender>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+            services.Configure<SieveOptions>(options =>
+            {
+                options.ThrowExceptions = true;
+            });
         }
     }
 }

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using UserManagement.Api.Dtos;
 
-namespace UserManagement.Api.Services.Interfaces
+namespace UserManagement.Api.Services.AuthService
 {
     public interface IAuthService
     {

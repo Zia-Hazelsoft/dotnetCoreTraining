@@ -1,6 +1,6 @@
 using UserManagement.Api.Dtos;
 
-namespace UserManagement.Api.Services.Interfaces
+namespace UserManagement.Api.Services.UserService
 {
     public interface IUserService
     {
