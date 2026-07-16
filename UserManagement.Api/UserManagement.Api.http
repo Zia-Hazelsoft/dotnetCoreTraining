@@ -14,12 +14,12 @@ Content-Type: application/json
 ###
 
 # Copy the value of $.data.token from the login response and paste it below:
-@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDIyIiwiZW1haWwiOlsiYmlsYWwuYWhtZWRAZXhhbXBsZS5jb20iLCJiaWxhbC5haG1lZEBleGFtcGxlLmNvbSJdLCJuYW1laWQiOiIxMDIyIiwiZ2l2ZW5fbmFtZSI6IkJpbGFsIiwiZmFtaWx5X25hbWUiOiJBaG1lZCIsInVuaXF1ZV9uYW1lIjoiQmlsYWwgQWhtZWQiLCJuYmYiOjE3ODM5MzIyNjYsImV4cCI6MTc4MzkzNTg2NiwiaWF0IjoxNzgzOTMyMjY2LCJpc3MiOiJVc2VyTWFuYWdlbWVudEFwaSIsImF1ZCI6IlVzZXJNYW5hZ2VtZW50Q2xpZW50In0.JguJ2rIh17ZdFeFZ2e9DA7WTHJYXt-OFpWAu7gm3Vk4
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDIyIiwiZW1haWwiOlsiYmlsYWwuYWhtZWRAZXhhbXBsZS5jb20iLCJiaWxhbC5haG1lZEBleGFtcGxlLmNvbSJdLCJuYW1laWQiOiIxMDIyIiwiZ2l2ZW5fbmFtZSI6IkJpbGFsIiwiZmFtaWx5X25hbWUiOiJBaG1lZCIsInVuaXF1ZV9uYW1lIjoiQmlsYWwgQWhtZWQiLCJuYmYiOjE3ODM5MzIyNjYsImV4cCI6MTc4MzkzNTg2NiwiaWF0IjoxNzgzOTMyMjY2LCJpc3MiOiJVc2VyTWFuYWdlbWVudEFwaSIsImF1ZCI6IlVzZXJNYW5hZ2VtZW50Q2xpZW50In0.JguJ2rIh17ZdFeFZ2e9DA7WTHJYXt-OFpWAu7gm3Vk4
 ###
 
-# 2. Get Users (Paginated, Searchable, Sortable)
-# Try changing query parameters: pageNumber, pageSize, searchTerm, orderBy
-GET {{HostAddress}}/api/v1/users?pageNumber=1&pageSize=10&searchTerm=Bilal&orderBy=lastName desc
+# 2. Get Users (Paginated, Filterable, Sortable)
+# Try changing query parameters: pageNumber, pageSize, orderBy
+GET {{HostAddress}}/api/v1/users?pageNumber=1&pageSize=10&orderBy=LastName desc
 Authorization: Bearer {{token}}
 
 ###
@@ -61,52 +61,46 @@ Authorization: Bearer {{token}}
 
 ###
 
-# 7. Dynamic Filtering Tests (Success Cases)
+# 7. Dynamic Filtering Tests using System.Linq.Dynamic.Core (Success Cases)
 
 # 7.1 Filter by exact email (string equality)
-GET {{HostAddress}}/api/v1/users?filters=email==bilal.ahmed@example.com
+GET {{HostAddress}}/api/v1/users?filters=Email == "bilal.ahmed@example.com"
 Authorization: Bearer {{token}}
 
 ###
 
-# 7.2 Filter by partial matching (case-insensitive contains)
-GET {{HostAddress}}/api/v1/users?filters=firstName@=sar
+# 7.2 Filter by partial matching (case-insensitive contains using string method)
+GET {{HostAddress}}/api/v1/users?filters=FirstName.ToLower().Contains("sar")
 Authorization: Bearer {{token}}
 
 ###
 
 # 7.3 Filter by Boolean state
-GET {{HostAddress}}/api/v1/users?filters=emailConfirmed==true
+GET {{HostAddress}}/api/v1/users?filters=EmailConfirmed == true
 Authorization: Bearer {{token}}
 
 ###
 
-# 7.4 Filter by Boolean state using binary integers (1/0)
-GET {{HostAddress}}/api/v1/users?filters=emailConfirmed==1
+# 7.4 Filter by numeric comparison (greater than)
+GET {{HostAddress}}/api/v1/users?filters=Id > 1023
 Authorization: Bearer {{token}}
 
 ###
 
-# 7.5 Filter by numeric comparison (greater than)
-GET {{HostAddress}}/api/v1/users?filters=id>1023
+# 7.5 Combined Filters: EmailConfirmed AND Numeric ID (using 'and' operator)
+GET {{HostAddress}}/api/v1/users?filters=EmailConfirmed == true and Id > 1022
 Authorization: Bearer {{token}}
 
 ###
 
-# 7.6 Filter by quoted string values
-GET {{HostAddress}}/api/v1/users?filters=firstName=="Sarah"
+# 7.6 Combined Filters using OR logic
+GET {{HostAddress}}/api/v1/users?filters=FirstName.Contains("Sarah") or FirstName.Contains("Bilal")
 Authorization: Bearer {{token}}
 
 ###
 
-# 7.7 Combined Filters: Boolean Status AND Numeric ID
-GET {{HostAddress}}/api/v1/users?filters=emailConfirmed==true,id>=1022
-Authorization: Bearer {{token}}
-
-###
-
-# 7.8 Combined Filters with Search and OrderBy
-GET {{HostAddress}}/api/v1/users?filters=emailConfirmed==true&searchTerm=khan&orderBy=firstName desc
+# 7.7 Combined Filters with OrderBy and Pagination
+GET {{HostAddress}}/api/v1/users?filters=EmailConfirmed == true and Id > 1022&orderBy=FirstName desc&pageNumber=1&pageSize=5
 Authorization: Bearer {{token}}
 
 ###
@@ -114,29 +108,17 @@ Authorization: Bearer {{token}}
 # 8. Dynamic Filtering Tests (Validation Failure Cases - Expected 400 Bad Request)
 
 # 8.1 Wrong type format (Boolean parsing error)
-GET {{HostAddress}}/api/v1/users?filters=emailConfirmed==not_a_boolean
+GET {{HostAddress}}/api/v1/users?filters=EmailConfirmed == "not_a_boolean"
 Authorization: Bearer {{token}}
 
 ###
 
-# 8.2 Wrong type format (Integer parsing error)
-GET {{HostAddress}}/api/v1/users?filters=id==abc
+# 8.2 Non-existent property name
+GET {{HostAddress}}/api/v1/users?filters=Age == 25
 Authorization: Bearer {{token}}
 
 ###
 
-# 8.3 Non-existent property name
-GET {{HostAddress}}/api/v1/users?filters=age==25
-Authorization: Bearer {{token}}
-
-###
-
-# 8.4 Invalid operator syntax
-GET {{HostAddress}}/api/v1/users?filters=emailEqualsvalue
-Authorization: Bearer {{token}}
-
-###
-
-# 8.5 Multiple validation errors collected together
-GET {{HostAddress}}/api/v1/users?filters=emailConfirmed==abc,invalidProperty==true
+# 8.3 Invalid operator / syntax error
+GET {{HostAddress}}/api/v1/users?filters=EmailConfirmed = true
 Authorization: Bearer {{token}}

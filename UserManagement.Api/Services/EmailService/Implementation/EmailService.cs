@@ -1,14 +1,9 @@
 using MailKit.Net.Smtp;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using System;
-using System.Threading.Tasks;
 using UserManagement.Api.Configuration;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Models;
-using UserManagement.Api.Services.EmailService;
 
 namespace UserManagement.Api.Services.EmailService.Implementation
 {

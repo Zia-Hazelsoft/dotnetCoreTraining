@@ -30,8 +30,6 @@ namespace UserManagement.Api.Services.UserService.Implementation
             PagedList<User> pagedUsers = await _userRepository.GetPagedAsync(
                 userParameters.PageNumber,
                 userParameters.PageSize,
-                userParameters.SearchTerm,
-                [nameof(User.FirstName), nameof(User.LastName), nameof(User.Email)],
                 userParameters.Filters,
                 userParameters.OrderBy,
                 nameof(User.Id),

@@ -1,9 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using UserManagement.Api.Common;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Services.AuthService;
