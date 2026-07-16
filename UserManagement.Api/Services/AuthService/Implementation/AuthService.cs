@@ -1,8 +1,5 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using UserManagement.Api.Constants;
 using UserManagement.Api.Dtos;
 using UserManagement.Api.Models;

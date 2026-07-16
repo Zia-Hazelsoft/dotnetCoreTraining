@@ -24,10 +24,9 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
     {
-        List<string> errors = context.ModelState.Values
+        List<string> errors = [.. context.ModelState.Values
             .SelectMany(v => v.Errors)
-            .Select(e => e.ErrorMessage)
-            .ToList();
+            .Select(e => e.ErrorMessage)];
 
         ApiResponse<object> response = ApiResponse<object>.FailureResponse(Messages.Error.ValidationFailed, errors);
         return new BadRequestObjectResult(response);
@@ -52,7 +51,7 @@ using (IServiceScope scope = app.Services.CreateScope())
     IServiceProvider services = scope.ServiceProvider;
     AppDbContext db = services.GetRequiredService<AppDbContext>();
 
-    // Apply database migrations automatically (useful during development when tables are added)
+    // Apply database migrations automatically
     db.Database.Migrate();
 }
 

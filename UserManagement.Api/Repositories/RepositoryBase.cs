@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Sieve.Services;
+using System;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core.Exceptions;
 using System.Threading.Tasks;
 using UserManagement.Api.Common;
 using UserManagement.Api.Data;
-using UserManagement.Api.Extensions;
 
 namespace UserManagement.Api.Repositories
 {
@@ -12,16 +13,12 @@ namespace UserManagement.Api.Repositories
     /// Implements generic database persistence operations and pagination logic backed by EF Core.
     /// </summary>
     /// <typeparam name="T">The database entity type.</typeparam>
-    public class RepositoryBase<T>(
-        AppDbContext repositoryContext,
-        ISieveProcessor sieveProcessor) : IRepositoryBase<T> where T : class
+    public class RepositoryBase<T>(AppDbContext repositoryContext) : IRepositoryBase<T> where T : class
     {
         /// <summary>
         /// Gets or sets the EF Core database context.
         /// </summary>
         protected AppDbContext RepositoryContext { get; set; } = repositoryContext;
-
-        private readonly ISieveProcessor _sieveProcessor = sieveProcessor;
 
         /// <summary>
         /// Retrieves all records of type T from the database context.
@@ -62,12 +59,10 @@ namespace UserManagement.Api.Repositories
         public async Task<T?> GetByIdAsync(int id) => await RepositoryContext.Set<T>().FindAsync(id);
 
         /// <summary>
-        /// Retrieves a paginated, filtered, searched, and sorted list of entities.
+        /// Retrieves a paginated, filtered, and sorted list of entities.
         /// </summary>
         /// <param name="pageNumber">The index of the page to retrieve (1-based).</param>
         /// <param name="pageSize">The number of items per page.</param>
-        /// <param name="searchTerm">The search term filter.</param>
-        /// <param name="searchFields">The fields to match the search term against.</param>
         /// <param name="filterString">The string containing comma-separated filter clauses.</param>
         /// <param name="orderBy">The sorting order string.</param>
         /// <param name="defaultSortProperty">The fallback sorting property when orderBy is omitted.</param>
@@ -76,8 +71,6 @@ namespace UserManagement.Api.Repositories
         public async Task<PagedList<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,
-            string? searchTerm,
-            string[] searchFields,
             string? filterString,
             string? orderBy,
             string defaultSortProperty,
@@ -85,9 +78,28 @@ namespace UserManagement.Api.Repositories
         {
             IQueryable<T> query = FindAll(trackChanges);
 
-            query = query.Filter(_sieveProcessor, filterString);
-            query = query.Search(searchTerm, searchFields);
-            query = query.Sort(orderBy, defaultSortProperty);
+            // Dynamic Filter Logic
+            if (!string.IsNullOrWhiteSpace(filterString))
+            {
+                try
+                {
+                    query = query.Where(filterString);
+                }
+                catch (ParseException ex)
+                {
+                    throw new ArgumentException(ex.Message);
+                }
+            }
+
+            // Dynamic Sort Logic 
+            if (string.IsNullOrWhiteSpace(orderBy))
+            {
+                query = query.OrderBy(defaultSortProperty);
+            }
+            else
+            {
+                query = query.OrderBy(orderBy);
+            }
 
             return await PagedList<T>.ToPagedListAsync(query, pageNumber, pageSize);
         }

@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Collections.Generic;
-using System.Linq;
 using UserManagement.Api.Common;
 
 namespace UserManagement.Api.Controllers
@@ -13,8 +10,6 @@ namespace UserManagement.Api.Controllers
     /// </summary>
     public abstract class BaseApiController : ControllerBase
     {
-        // ---- Strongly-typed helpers (preferred: use these from your controllers) ----
-
         /// <summary>
         /// Returns 200 OK with a strongly-typed ApiResponse&lt;T&gt; envelope.
         /// Preferred over the object-based Ok(...) overloads when you know T,
