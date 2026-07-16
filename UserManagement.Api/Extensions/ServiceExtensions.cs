@@ -15,9 +15,7 @@ using UserManagement.Api.Services.TokenService;
 using UserManagement.Api.Services.TokenService.Implementation;
 using UserManagement.Api.Services.UserService;
 using UserManagement.Api.Services.UserService.Implementation;
-using Sieve.Models;
-using Sieve.Services;
-using UserManagement.Api.Services;
+using UserManagement.Api.Configuration;
 
 namespace UserManagement.Api.Extensions
 {
@@ -49,8 +47,13 @@ namespace UserManagement.Api.Extensions
         // 3. Configure JWT Authentication
         public static void ConfigureJwt(this IServiceCollection services, IConfiguration configuration)
         {
-            IConfigurationSection jwtSettings = configuration.GetSection("Jwt");
-            byte[] key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Secret Key is not configured."));
+            JwtSettings? jwtSettings = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
+            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Key))
+            {
+                throw new InvalidOperationException("JWT Secret Key is not configured.");
+            }
+
+            byte[] key = Encoding.UTF8.GetBytes(jwtSettings.Key);
 
             services.AddAuthentication(options =>
             {
@@ -65,8 +68,8 @@ namespace UserManagement.Api.Extensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ClockSkew = TimeSpan.Zero
                 };
@@ -108,11 +111,6 @@ namespace UserManagement.Api.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
-            services.Configure<SieveOptions>(options =>
-            {
-                options.ThrowExceptions = true;
-            });
         }
     }
 }
